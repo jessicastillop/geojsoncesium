@@ -4,7 +4,6 @@
 <script src="Build/Cesium/Cesium.js"></script>
 <style>
 @import url("Build/Cesium/Widgets/widgets.css");
-
 </style>
 </head>
 <body>
@@ -15,73 +14,57 @@
 
 <script>
 	
-//Crear un objeto visor y asignarlo al contenedor con algunas propiedades	
-	var viewer = new Cesium.Viewer('cesiumContainer', {
-   	infoBox : false,
-    	selectionIndicator : false
-	});
-	
-
-
+var viewer = new Cesium.Viewer('cesiumContainer',{
+    
+    selectionIndicator : false,
+    infoBox:false
+});
 var entity = viewer.entities.add({
 	//Cartesian3 representa un punto en el espacio euclidiano
 	//Cesium.Cartesian3.fromDegrees(longitude, latitude, height, ellipsoid, result)
 	position : Cesium.Cartesian3.fromDegrees(-74.175806,4.628222,0),
    model : {
-   	uri : 'figuras.gltf',
-        scale: 1
-      //minimumPixelSize : 128
-   },
-   label: {
+   	uri : 'cubo.gltf',
+        scale:1
+     // minimumPixelSize : 128
+   }, 
+   label : {
             show : false,
             showBackground : true,
             font : '14px monospace',
             //horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
             //verticalOrigin : Cesium.VerticalOrigin.BASELINE,
         }
+   
 });
-
-
-
-
 viewer.zoomTo(entity);
-var scene = viewer.scene;
+    
+    
+    var scene = viewer.scene;
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-
-//Change color on mouse over.  This relies on the fact that given a primitive,
-//you can retrieve an associted en
-var lastColor;
-var lastPick;
-
 handler.setInputAction(function(click) {
     var alertText = '';
-    function addToMessage(key,value) {
+    function addToMessage(key, value) {
         alertText += key + ': ' + value + '\n';
     }
-
     var pickedObject = scene.pick(click.position);
     if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
-        addToMessage('Holi a todosh'+'Saludos');
-        entity.label.eyeOffset= new Cesium.Cartesian3(0,2,0);
+        addToMessage('Objeto', pickedObject.id.id);
+        var position = viewer.camera.pickEllipsoid(click.position);
+        addToMessage('Posición X', click.position.x);
+        addToMessage('Posición Y', click.position.y);
+        var cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
+        addToMessage('Longitud', Cesium.Math.toDegrees(cartographicPosition.longitude));
+        addToMessage('Latitud', Cesium.Math.toDegrees(cartographicPosition.latitude));
+        terrainSamplePositions = [cartographicPosition];
+        
+        entity.label.eyeOffset= new Cesium.Cartesian3(0,20,0);
         entity.label.show = true;
-        entity.label.text = alertText;
-     }
-     else{
+            entity.label.text = alertText;
+    }else{
         entity.label.show = false;
     }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-//Ability to look up the Model associated with an entity
-function getModelForEntity(entity) {
-    var primitives = viewer.scene.primitives;
-    for (var i = 0; i < primitives.length; i++) {
-        var primitive = primitives.get(i);
-        if (primitive instanceof Cesium.Model && primitive.id === entity) {
-            return primitive;
-        }
-    }
-};
-
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 </script>
 </body>
 </html>
